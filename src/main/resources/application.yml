@@ -1,3 +1,19 @@
+server:
+  port: ${PORT:8089}
+  error:
+    include-message: always
+
 spring:
   application:
     name: hacka-msc-pcs-midia
+  output:
+    ansi:
+      enabled: Always
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

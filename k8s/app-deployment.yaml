@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hacka-msc-pcs-midia
+  labels:
+    app: hacka-msc-pcs-midia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hacka-msc-pcs-midia
+  template:
+    metadata:
+      labels:
+        app: hacka-msc-pcs-midia
+    spec:
+      containers:
+        - name: hacka-msc-pcs-midia
+          image: josevitordurante/hacka-msc-pcs-midia:latest
+          ports:
+            - containerPort: 8089
+          env:
+            - name: PORT
+              value: "8089"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
