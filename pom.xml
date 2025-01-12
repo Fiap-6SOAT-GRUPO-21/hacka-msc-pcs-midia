@@ -65,6 +65,13 @@
             <version>0.8.10</version>
         </dependency>
 
+        <!-- https://github.com/bramp/ffmpeg-cli-wrapper-->
+        <dependency>
+            <groupId>net.bramp.ffmpeg</groupId>
+            <artifactId>ffmpeg</artifactId>
+            <version>0.8.0</version>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>
