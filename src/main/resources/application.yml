@@ -2,6 +2,8 @@ server:
   port: ${PORT:8089}
   error:
     include-message: always
+  servlet:
+    context-path: '/pcs-midia/'
 
 spring:
   application:
