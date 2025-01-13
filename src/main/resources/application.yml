@@ -19,3 +19,13 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
+
+variables:
+  env: ${ENV:local}
+  aws:
+    region: ${AWS_REGION:us-east-1}
+    access-key: ${AWS_ACCESS_KEY:localstack}
+    secret-key: ${AWS_SECRET_KEY:localstack}
+    session-token: ${AWS_SESSION_TOKEN:localstack}
+    queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
+    queue-name-result: ${QUEUE_NAME_RESULT:result_media}

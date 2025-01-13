@@ -30,6 +30,34 @@ jobs:
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name hacka --region us-east-1
 
+      - name: Get RDS credentials from SSM Parameter Store
+        id: get-parameters
+        run: |
+          SQS_QUEUE_PROCESSING=$(aws ssm get-parameter --name "/hacka/sqs/sqs_result_media" --query "Parameter.Value" --output text)
+          SQS_QUEUE_RESULT=$(aws ssm get-parameter --name "/hacka/sqs/result_media" --query "Parameter.Value" --output text)
+          echo "SQS_QUEUE_PROCESSING=$SQS_QUEUE_PROCESSING" >> $GITHUB_ENV
+          echo "SQS_QUEUE_RESULT=$SQS_QUEUE_RESULT" >> $GITHUB_ENV
+
+      - name: Kubectl tool installer
+        uses: Azure/setup-kubectl@v4.0.0
+        with:
+          version: latest
+
+      - name: Update ConfigMap with RDS credentials
+        run: |
+          kubectl apply -f k8s/app-configmap.yaml
+          kubectl patch configmap hacka-msc-pcs-midia-config --type=merge -p="{
+            \"data\": {
+              \"ENV\": \"AWS\",
+              \"AWS_REGION\": \"us-east-1\",
+              \"AWS_ACCESS_KEY\": \"$AWS_ACCESS_KEY_ID\",
+              \"AWS_SECRET_KEY\": \"$AWS_SECRET_ACCESS_KEY\",
+              \"AWS_SESSION_TOKEN\": \"$AWS_SESSION_TOKEN\",
+              \"QUEUE_NAME_PROCESSING\": \"$SQS_QUEUE_PROCESSING\",
+              \"QUEUE_NAME_RESULT\": \"$SQS_QUEUE_RESULT\"
+            }
+          }"
+
       - name: Deploy Application
         run: |
           kubectl apply -f k8s/app-deployment.yaml
