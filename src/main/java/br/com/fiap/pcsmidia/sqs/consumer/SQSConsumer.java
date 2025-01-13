@@ -13,14 +13,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class SQSConsumer {
 
-    @Value("${variables.aws.queue-name-result}")
+    @Value("${variables.aws.queue-name-processing}")
     private String consumerQueueName;
 
     @Autowired
     private AmazonSQS amazonSQSClient;
 
     @Scheduled(fixedDelay = 5000)
-    public void consumeResultMessages() {
+    public void consumePrecessingMessages() {
         try {
             // Obter a URL da fila
             String queueUrl = amazonSQSClient.getQueueUrl(consumerQueueName).getQueueUrl();

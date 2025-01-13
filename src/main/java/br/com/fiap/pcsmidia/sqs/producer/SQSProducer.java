@@ -21,13 +21,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SQSProducer {
 
-    @Value("${variables.aws.queue-name-processing}")
+    @Value("${variables.aws.queue-name-result}")
     private String publisherQueueName;
 
     @Autowired
     private AmazonSQS amazonSQSClient;
 
-    public void publishMessage(MediaMessage message) {
+    public void publishMessageResult(MediaMessage message) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             // Obter a URL da fila
