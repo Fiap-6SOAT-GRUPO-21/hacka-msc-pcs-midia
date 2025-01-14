@@ -21,6 +21,12 @@
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <springdoc.version>2.5.0</springdoc.version>
         <modelmapper.version>3.2.0</modelmapper.version>
+
+        <sonar.organization>fiap-6soat-grupo-21</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.projectKey>Fiap-6SOAT-GRUPO-21_hacka-msc-pcs-midia</sonar.projectKey>
+
     </properties>
 
     <dependencies>
