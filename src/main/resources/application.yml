@@ -8,9 +8,29 @@ server:
 spring:
   application:
     name: hacka-msc-pcs-midia
+  datasource:
+    url: jdbc:postgresql://${DB_URL:localhost}:${DB_PORT:5432}/${DB_NAME:mscmgmtmedia}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    properties:
+      hibernate:
+        show_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: create
   output:
     ansi:
       enabled: Always
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    problemdetails:
+      enabled: true
 
 springdoc:
   api-docs:
@@ -24,8 +44,12 @@ variables:
   env: ${ENV:local}
   aws:
     region: ${AWS_REGION:us-east-1}
+
     access-key: ${AWS_ACCESS_KEY:localstack}
     secret-key: ${AWS_SECRET_KEY:localstack}
     session-token: ${AWS_SESSION_TOKEN:localstack}
+
+    bucket-name-media: ${AWS_BUCKET:media-files-001}
+
     queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
     queue-name-result: ${QUEUE_NAME_RESULT:result_media}

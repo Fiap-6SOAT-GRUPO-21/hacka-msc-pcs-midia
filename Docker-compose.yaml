@@ -1,0 +1,51 @@
+# Comando para executar: docker compose up --build --force-recreate
+version: '3.9'
+
+networks:
+  msc-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  db_postgres_hacka_msc_mgmt_media:
+    container_name: db_postgres_hacka_msc_mgmt_media
+    image: 'postgres:13.4'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mscmgmtmedia
+    ports:
+      - "5432:5432"
+    networks:
+      - msc-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8085:80"
+    depends_on:
+      - db_postgres_hacka_msc_mgmt_media
+
+  # Depois de rodar o localstack com sqs e s3 rodar o comando abaixo para criar as filas em sqs_bootstrap.sh
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,s3
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - DEBUG=1
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      - ./s3-data:/data

@@ -1,6 +1,10 @@
 package br.com.fiap.pcsmidia.sqs.consumer;
 
+import br.com.fiap.pcsmidia.service.ProcessMessageService;
+import br.com.fiap.pcsmidia.sqs.model.MediaMessage;
+import br.com.fiap.pcsmidia.storage.S3Test;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import lombok.extern.log4j.Log4j2;
@@ -15,6 +19,9 @@ public class SQSConsumer {
 
     @Value("${variables.aws.queue-name-processing}")
     private String consumerQueueName;
+
+    @Autowired
+    private ProcessMessageService service;
 
     @Autowired
     private AmazonSQS amazonSQSClient;
@@ -38,12 +45,15 @@ public class SQSConsumer {
             for (com.amazonaws.services.sqs.model.Message message : receiveMessageResult.getMessages()) {
                 log.info("====================== Read Message from queue: {}", message.getBody());
 
+                service.processMedia(message.getBody());
+
                 // Apagar mensagem da fila
                 amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
             }
 
         } catch (Exception e) {
             log.error("Queue Exception Message: {}", e.getMessage(), e);
+            S3Test.testeS3();
         }
     }
 }
