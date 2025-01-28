@@ -10,6 +10,7 @@ import java.util.UUID;
 public record MediaMessage(
         UUID mediaId,
         String storagePath,
-        String userReference
+        String userReference,
+        String status
 ) {
 }

@@ -8,19 +8,6 @@ server:
 spring:
   application:
     name: hacka-msc-pcs-midia
-  datasource:
-    url: jdbc:postgresql://${DB_URL:localhost}:${DB_PORT:5432}/${DB_NAME:mscmgmtmedia}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-  jpa:
-    properties:
-      hibernate:
-        show_sql: false
-        jdbc:
-          lob:
-            non_contextual_creation: true
-    hibernate:
-      ddl-auto: create
   output:
     ansi:
       enabled: Always
@@ -49,7 +36,9 @@ variables:
     secret-key: ${AWS_SECRET_KEY:localstack}
     session-token: ${AWS_SESSION_TOKEN:localstack}
 
-    bucket-name-media: ${AWS_BUCKET:media-files-001}
+    bucket-name-media: ${HACKA_BUCKET_NAME_MEDIA_FILES:media-files}
+    pending-process-folder: pending-process
+    processed-folder: processed
 
     queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
     queue-name-result: ${QUEUE_NAME_RESULT:result_media}

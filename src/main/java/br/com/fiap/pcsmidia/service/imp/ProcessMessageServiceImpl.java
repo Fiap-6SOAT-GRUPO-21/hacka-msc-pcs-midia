@@ -1,13 +1,13 @@
 package br.com.fiap.pcsmidia.service.imp;
 
-import br.com.fiap.pcsmidia.repository.MediaRepository;
-import br.com.fiap.pcsmidia.repository.entity.MediaMetadata;
 import br.com.fiap.pcsmidia.service.ProcessMessageService;
-import br.com.fiap.pcsmidia.storage.service.S3MediaService;
 import br.com.fiap.pcsmidia.sns.service.SendSmsService;
-import br.com.fiap.pcsmidia.sqs.model.MediaMessage;
-import br.com.fiap.pcsmidia.util.enumerated.MediaStatus;
-import br.com.fiap.pcsmidia.util.exception.MediaMetadataNotFound;
+import br.com.fiap.pcsmidia.sqs.MediaMessage;
+import br.com.fiap.pcsmidia.sqs.producer.SQSProducer;
+import br.com.fiap.pcsmidia.storage.service.S3MediaService;
+import br.com.fiap.pcsmidia.util.JwtParser;
+import br.com.fiap.pcsmidia.util.constant.MediaStatus;
+import br.com.fiap.pcsmidia.util.constant.SmsTextMessages;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,50 +22,34 @@ import java.nio.file.Path;
 @RequiredArgsConstructor
 public class ProcessMessageServiceImpl implements ProcessMessageService {
 
-    final MediaRepository mediaRepository;
-//    final SQSProducer sqsProducer;
     final S3MediaService s3MediaService;
     final SendSmsService sendSmsService;
     final ExtractFramesService extractFramesService;
+    final SQSProducer producer;
 
     @Override
     public void processMedia(String message) throws Exception {
 
-        // Ler mensagem do SQS
         Gson gson = new Gson();
         MediaMessage mediaMessage = gson.fromJson(message, MediaMessage.class);
 
         log.info("----------- Starting media processing -----------");
+        mediaMessage.setStatus(MediaStatus.PROCESSING);
+        producer.publishMessageResult(mediaMessage);
+        log.info("Updated media metadata status to PROCESSING in repository with ID: {}", mediaMessage.getMediaId());
 
-        // Alterando Status para Processando
-        MediaMetadata mediaMetadata = mediaRepository.findById(mediaMessage.mediaId()).orElseThrow(MediaMetadataNotFound::new);
-        mediaMetadata.setStatus(MediaStatus.PROCESSING);
-        mediaRepository.save(mediaMetadata);
-        log.info("Updated media metadata status to PROCESSING in repository with ID: {}", mediaMetadata.getMediaId());
-
-        File file = s3MediaService.downloadMedia(mediaMessage.storagePath());
+        File file = s3MediaService.downloadMedia(mediaMessage.getStoragePath());
         Path framesPath = extractFramesService.extractFramesFromFile(file);
-        s3MediaService.uploadFrames(file.getName(), framesPath);
+        String zippedFolderPath = s3MediaService.uploadFrames(mediaMessage.getUserReference(), mediaMessage.getMediaId(), framesPath);
 
-        String zippedFolderPath = "frames_teste001/" + file.getName() + "/";
-        mediaMetadata.setZippedFolderPath(zippedFolderPath);
-        mediaMetadata.setStatus(MediaStatus.PROCESSED);
-        mediaRepository.save(mediaMetadata);
-        log.info("Updated media metadata status to PROCESSED in repository with ID: {}", mediaMetadata.getMediaId());
+        mediaMessage.setStatus(MediaStatus.PROCESSED);
+        mediaMessage.setZippedPath(zippedFolderPath);
+        producer.publishMessageResult(mediaMessage);
+        log.info("Updated media metadata status to PROCESSED in repository with ID: {}", mediaMessage.getMediaId());
 
-        sendSmsService.sendSms("+5511982478239", "Mensagem Teste Gabriel");
-        sendSmsService.sendSms("+5511947015353", "Mensagem Teste Gabriel");
-        sendSmsService.sendSms("+5511972656287", "Mensagem Teste Gabriel");
-        sendSmsService.sendSms("+5511959554644", "Mensagem Teste Gabriel");
+        String phoneNumber = JwtParser.getPhoneNumber();
+        sendSmsService.sendSms(phoneNumber, SmsTextMessages.SUCCESSFULLY_PROCESSED);
 
-
-        // Fazer Download do vídeo como InputStream
-        // InputStream file = s3MediaService.downloadMediaAsStream(mediaMessage.storagePath());
-
-        // Processar o vídeo de um InputStream
-//        extractFramesService.extractFramesFromStream(InputStream file, Path.of("./downloadLocal"));;
-//
-//        // Enviar para o managment uma mensagem de sucesso
-
+        log.info("----------- Finished media processing -----------");
     }
 }

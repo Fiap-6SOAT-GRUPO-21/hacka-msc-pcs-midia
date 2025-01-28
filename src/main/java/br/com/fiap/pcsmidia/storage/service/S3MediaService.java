@@ -1,15 +1,13 @@
 package br.com.fiap.pcsmidia.storage.service;
 
 import java.io.File;
-import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.UUID;
 
 public interface S3MediaService {
 
     File downloadMedia(String path);
 
-    InputStream downloadMediaAsStream(String path);
-
-    void uploadFrames(String path, Path framesDir);
+    String uploadFrames(String userReference, UUID mediaId, Path framesDir);
 
 }
