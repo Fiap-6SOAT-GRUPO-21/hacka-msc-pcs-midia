@@ -57,6 +57,11 @@ spec:
                 configMapKeyRef:
                   name: hacka-msc-pcs-midia-config
                   key: QUEUE_NAME_RESULT
+            - name: HACKA_BUCKET_NAME_MEDIA_FILES
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-pcs-midia-config
+                  key: HACKA_BUCKET_NAME_MEDIA_FILES
           resources:
             requests:
               memory: "128Mi"
