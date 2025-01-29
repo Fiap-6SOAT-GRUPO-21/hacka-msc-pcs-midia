@@ -2,6 +2,7 @@ package br.com.fiap.pcsmidia.sqs.consumer;
 
 import br.com.fiap.pcsmidia.service.ProcessMessageService;
 import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import lombok.extern.log4j.Log4j2;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Log4j2
 @Service
@@ -25,37 +28,42 @@ public class SQSConsumer {
 
     @Scheduled(fixedDelay = 5000)
     public void consumePrecessingMessages() {
+        String queueUrl = null;
+
         try {
-            // Obter a URL da fila
-            String queueUrl = amazonSQSClient.getQueueUrl(consumerQueueName).getQueueUrl();
+            queueUrl = amazonSQSClient.getQueueUrl(consumerQueueName).getQueueUrl();
+        } catch (Exception e) {
+            log.error("Failed to get SQS queue URL for {}: {}", consumerQueueName, e.getMessage(), e);
+            return;
+        }
 
-            // Configurar a requisição para receber mensagens
-            ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
-                    .withQueueUrl(queueUrl)
-                    .withMaxNumberOfMessages(1) // Receber até 5 mensagens por vez
-                    .withWaitTimeSeconds(10);  // Polling longo (10 segundos)
+        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
+                .withQueueUrl(queueUrl)
+                .withMaxNumberOfMessages(10)
+                .withWaitTimeSeconds(20); // Espera até 20 segundos por novas mensagens;
 
-            // Receber mensagens
+        try {
             ReceiveMessageResult receiveMessageResult = amazonSQSClient.receiveMessage(receiveMessageRequest);
+            List<Message> messages = receiveMessageResult.getMessages();
 
-            // Processar mensagens recebidas
-            for (com.amazonaws.services.sqs.model.Message message : receiveMessageResult.getMessages()) {
-                log.info("====================== Read Message from queue: {}", message.getBody());
-
-                try {
-                    service.processMedia(message.getBody());
-                    amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
-                }catch (Exception e) {
-
-                    //TODO: REMOVER O DELETE MESSAGE
-                    // Apagar mensagem da fila
-                    amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
-                    log.error("Queue Exception Message: {}", e.getMessage(), e);
-                }
+            if (messages.isEmpty()) {
+                log.info("No messages found in the queue.");
+                return;
             }
 
+            for (Message message : messages) {
+                try {
+                    service.processMedia(message.getBody());
+                } catch (Exception e) {
+                    log.error("Error processing message {}: {}", message.getMessageId(), e.getMessage(), e);
+                }
+                finally {
+                    amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
+                }
+            }
         } catch (Exception e) {
-            log.error("Queue Exception Message: {}", e.getMessage(), e);
+            log.error("Failed to consume messages from SQS queue: {}", e.getMessage(), e);
         }
+
     }
 }

@@ -30,7 +30,7 @@ public class S3MediaServiceImpl implements S3MediaService {
     private String processedFolder;
 
 
-//    private final S3Client s3Client = S3Client.create();
+    //    private final S3Client s3Client = S3Client.create();
     private final S3Client s3Client;
 
     @Override

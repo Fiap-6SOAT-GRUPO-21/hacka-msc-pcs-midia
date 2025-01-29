@@ -27,28 +27,33 @@ public class ProcessMessageServiceImpl implements ProcessMessageService {
     final SQSProducer producer;
 
     @Override
-    public void processMedia(String message) throws Exception {
+    public void processMedia(String message) {
 
         Gson gson = new Gson();
         MediaMessage mediaMessage = gson.fromJson(message, MediaMessage.class);
+        try {
+            log.info("----------- Starting media processing -----------");
+            mediaMessage.setStatus(MediaStatus.PROCESSING);
+            producer.publishMessageResult(mediaMessage);
+            log.info("Updated media metadata status to PROCESSING in repository with ID: {}", mediaMessage.getMediaId());
 
-        log.info("----------- Starting media processing -----------");
-        mediaMessage.setStatus(MediaStatus.PROCESSING);
-        producer.publishMessageResult(mediaMessage);
-        log.info("Updated media metadata status to PROCESSING in repository with ID: {}", mediaMessage.getMediaId());
+            File file = s3MediaService.downloadMedia(mediaMessage.getStoragePath());
+            Path framesPath = extractFramesService.extractFramesFromFile(file);
+            String zippedFolderPath = s3MediaService.uploadFrames(mediaMessage.getUserReference(), mediaMessage.getMediaId(), framesPath);
 
-        File file = s3MediaService.downloadMedia(mediaMessage.getStoragePath());
-        Path framesPath = extractFramesService.extractFramesFromFile(file);
-        String zippedFolderPath = s3MediaService.uploadFrames(mediaMessage.getUserReference(), mediaMessage.getMediaId(), framesPath);
+            mediaMessage.setStatus(MediaStatus.PROCESSED);
+            mediaMessage.setZippedPath(zippedFolderPath);
+            producer.publishMessageResult(mediaMessage);
+            log.info("Updated media metadata status to PROCESSED in repository with ID: {}", mediaMessage.getMediaId());
+            log.info("----------- Finished media processing -----------");
+        } catch (Exception e) {
+            mediaMessage.setStatus(MediaStatus.ERROR);
+            producer.publishMessageResult(mediaMessage);
+            sendSmsService.sendSms(mediaMessage.getPhoneNumber(), SmsTextMessages.ERROR_PROCESSING);
+            log.error("Error processing media: {}", e.getMessage(), e);
+        }
 
-        mediaMessage.setStatus(MediaStatus.PROCESSED);
-        mediaMessage.setZippedPath(zippedFolderPath);
-        producer.publishMessageResult(mediaMessage);
-        log.info("Updated media metadata status to PROCESSED in repository with ID: {}", mediaMessage.getMediaId());
-
-
+        log.info("Sending SMS to user: {}", mediaMessage.getPhoneNumber());
         sendSmsService.sendSms(mediaMessage.getPhoneNumber(), SmsTextMessages.SUCCESSFULLY_PROCESSED);
-
-        log.info("----------- Finished media processing -----------");
     }
 }

@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
 
@@ -31,14 +33,14 @@ public class SnsConfig {
 
     @Bean
     public SnsClient snsClient() {
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+        AwsSessionCredentials awsSessionCredentials = AwsSessionCredentials.create(accessKey, secretKey, sessionToken);
 
         // Se for ambiente local (usando o LocalStack)
         if (env.equals("local")) {
             log.info("Running in local environment, using LocalStack for S3");
             return SnsClient.builder()
                     .region(Region.of(region))
-                    .credentialsProvider(() -> awsBasicCredentials)
+                    .credentialsProvider(StaticCredentialsProvider.create(awsSessionCredentials))
                     .endpointOverride(URI.create("http://localhost:4566"))
                     .build();
         }
@@ -46,8 +48,8 @@ public class SnsConfig {
 
         log.info("Running SNS in AWS environment");
         return SnsClient.builder()
-                .credentialsProvider(() -> awsBasicCredentials)
-                .region(Region.of(region)) // Altere para sua região, se necessário
+                .credentialsProvider(StaticCredentialsProvider.create(awsSessionCredentials))
+                .region(Region.of(region))
                 .build();
     }
 }
