@@ -11,6 +11,13 @@ spring:
   output:
     ansi:
       enabled: Always
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    problemdetails:
+      enabled: true
 
 springdoc:
   api-docs:
@@ -24,8 +31,14 @@ variables:
   env: ${ENV:local}
   aws:
     region: ${AWS_REGION:us-east-1}
+
     access-key: ${AWS_ACCESS_KEY:localstack}
     secret-key: ${AWS_SECRET_KEY:localstack}
     session-token: ${AWS_SESSION_TOKEN:localstack}
+
+    bucket-name-media: ${HACKA_BUCKET_NAME_MEDIA_FILES:media-files}
+    pending-process-folder: pending-process
+    processed-folder: processed
+
     queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
     queue-name-result: ${QUEUE_NAME_RESULT:result_media}

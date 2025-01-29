@@ -1,6 +1,6 @@
 package br.com.fiap.pcsmidia.sqs.producer;
 
-import br.com.fiap.pcsmidia.sqs.model.MediaMessage;
+import br.com.fiap.pcsmidia.sqs.MediaMessage;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.GetQueueUrlResult;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;

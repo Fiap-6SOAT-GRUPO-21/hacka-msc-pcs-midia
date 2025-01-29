@@ -1,0 +1,26 @@
+# Comando para executar: docker compose up --build --force-recreate
+version: '3.9'
+
+networks:
+  msc-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  # Depois de rodar o localstack com sqs e s3 rodar o comando abaixo para criar as filas em sqs_bootstrap.sh
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs,s3,sns
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - DEBUG=1
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      - ./s3-data:/data
