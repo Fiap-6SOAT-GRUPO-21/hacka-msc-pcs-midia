@@ -5,7 +5,6 @@ import br.com.fiap.pcsmidia.sns.service.SendSmsService;
 import br.com.fiap.pcsmidia.sqs.MediaMessage;
 import br.com.fiap.pcsmidia.sqs.producer.SQSProducer;
 import br.com.fiap.pcsmidia.storage.service.S3MediaService;
-import br.com.fiap.pcsmidia.util.JwtParser;
 import br.com.fiap.pcsmidia.util.constant.MediaStatus;
 import br.com.fiap.pcsmidia.util.constant.SmsTextMessages;
 import com.google.gson.Gson;
@@ -47,8 +46,8 @@ public class ProcessMessageServiceImpl implements ProcessMessageService {
         producer.publishMessageResult(mediaMessage);
         log.info("Updated media metadata status to PROCESSED in repository with ID: {}", mediaMessage.getMediaId());
 
-        String phoneNumber = JwtParser.getPhoneNumber();
-        sendSmsService.sendSms(phoneNumber, SmsTextMessages.SUCCESSFULLY_PROCESSED);
+
+        sendSmsService.sendSms(mediaMessage.getPhoneNumber(), SmsTextMessages.SUCCESSFULLY_PROCESSED);
 
         log.info("----------- Finished media processing -----------");
     }

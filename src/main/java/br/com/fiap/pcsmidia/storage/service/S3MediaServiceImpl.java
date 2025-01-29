@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,7 +30,8 @@ public class S3MediaServiceImpl implements S3MediaService {
     private String processedFolder;
 
 
-    private final S3Client s3Client = S3Client.create();
+//    private final S3Client s3Client = S3Client.create();
+    private final S3Client s3Client;
 
     @Override
     public File downloadMedia(String path) {
